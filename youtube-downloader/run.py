@@ -53,9 +53,7 @@ def main(limit: int = None, out_dir: str = "./audio"):
         anno_filepath.write_text(r.text)
 
     with anno_filepath.open() as f:
-        # read with first row being headers
         reader = csv.DictReader(f)
-        # convert to list of tuples
         data_in = [
             (row["ytid"], int(row["start_s"]), int(row["end_s"]))
             for row in reader
