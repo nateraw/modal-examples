@@ -37,7 +37,12 @@ def download_clip(ytid, start_sec, end_sec, output_path="./data/videos", audio_o
 
 @stub.local_entrypoint()
 def main(limit: int = 128, out_dir: str = "./audio"):
+    """Download audio clips from the MusicCaps dataset.
 
+    Args:
+        limit (int, optional): Limit number of clips to download. Defaults to 128.
+        out_dir (str, optional): Directory to save audio clips to. Defaults to "./audio".
+    """
     annotation_url = "https://huggingface.co/datasets/google/MusicCaps/resolve/main/musiccaps-public.csv"
     anno_filepath = Path("musiccaps-public.csv")
     out_dir = Path(out_dir)
