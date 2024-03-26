@@ -66,8 +66,9 @@ def check_for_updates():
         event_ids = list(new_events)
         for i in range(0, len(event_ids), 3):
             msg_text = "\n".join(event_ids[i : i + 2])
-            # TODO - I was using in the msgs, but that was causing issue with format of sent message.
+            # TODO - I was using urls in the msgs, but that was causing issue with format of sent message.
             # I think this perhaps could be because of some spam filtering on Google's side.
+            # So, instead, I'm just sending the event ids for now.
             # I moved to use MIMEText instead of string, as I thought that would fix it, but it didn't.
             msg = MIMEText(msg_text)
             msg["Subject"] = "New Events at Mothership!"
