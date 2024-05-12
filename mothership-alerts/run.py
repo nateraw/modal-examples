@@ -1,30 +1,23 @@
 import json
 import os
-import smtplib
-from email.mime.text import MIMEText
 from pathlib import Path
 
-from modal import Cron, Image, Secret, Stub, Volume
-from modal.runner import deploy_stub
+from modal import App, Cron, Image, Secret, Volume
+from modal.runner import deploy_app
 
 
-stub = Stub()
-my_image = Image.debian_slim().pip_install("beautifulsoup4", "requests")
+app = App()
+my_image = Image.debian_slim().pip_install("beautifulsoup4", "requests", "twilio")
 volume = Volume.from_name("mothership", create_if_missing=True)
 
 VOLUME_MOUNT_PATH = Path("/vol")
 EVENT_LIST_PATH = VOLUME_MOUNT_PATH / "event_list.json"
-CARRIER_EXT_MAP = {
-    "att": "@txt.att.net",
-    "tmobile": "@tmomail.net",
-    "verizon": "@vtext.com",
-}
 
 
-@stub.function(
+@app.function(
     image=my_image,
     volumes={VOLUME_MOUNT_PATH: volume},
-    secrets=[Secret.from_name("textme")],
+    secrets=[Secret.from_name("twilio")],
     # Run every 5 minutes, all day erry day
     # That's 288 requests / day.
     schedule=Cron("*/10 * * * *"),
@@ -32,6 +25,7 @@ CARRIER_EXT_MAP = {
 def check_for_updates():
     import requests
     from bs4 import BeautifulSoup
+    from twilio.rest import Client
 
     url = "https://comedymothership.com/shows"
     response = requests.get(url)
@@ -60,28 +54,22 @@ def check_for_updates():
     if new_events:
         print("New events found:")
         print(json.dumps(new_events, indent=2))
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(os.environ["GOOGLE_EMAIL"], os.environ["GOOGLE_AUTH_PASSWORD"])
+        client = Client(os.environ["TWILIO_SID"], os.environ["TWILIO_AUTH"])
         event_ids = list(new_events)
-        for i in range(0, len(event_ids), 3):
-            msg_text = "\n".join(event_ids[i : i + 2])
-            # TODO - I was using urls in the msgs, but that was causing issue with format of sent message.
-            # I think this perhaps could be because of some spam filtering on Google's side.
-            # So, instead, I'm just sending the event ids for now.
-            # I moved to use MIMEText instead of string, as I thought that would fix it, but it didn't.
-            msg = MIMEText(msg_text)
-            msg["Subject"] = "New Events at Mothership!"
-            msg["From"] = os.environ["GOOGLE_EMAIL"]
-            msg["To"] = os.environ["PHONE_NUMBER"] + CARRIER_EXT_MAP[os.environ["PHONE_CARRIER"]]
-            server.send_message(msg)
-            print(f"Message sent!\n{'-' * 80}\n{msg_text}\n{'-' * 80}")
+        for event_id in event_ids:
+            event = new_events[event_id]
+            message = client.messages.create(
+                body=f"New event at Mothership! {event['date']} at {event['time']}: {event['url']}",
+                from_=os.environ["TWILIO_PHONE"],
+                to=os.environ["TO_PHONE"],
+            )
+            print(f"Message sent!\n{message.sid}")
     else:
         print("No new events found")
 
         # For debugging, you can delete some events from the event list to test the alert works
-        # # Delete a few existing events for testing purposes
-        # for event_id in list(old_data)[:6]:
+        # Delete a few existing events for testing purposes
+        # for event_id in list(old_data)[:3]:
         #     del old_data[event_id]
 
         # EVENT_LIST_PATH.write_text(json.dumps(old_data, indent=2))
@@ -89,4 +77,4 @@ def check_for_updates():
 
 
 if __name__ == "__main__":
-    deploy_stub(stub, name="mothership-ticket-alerts")
+    deploy_app(app, name="mothership-ticket-alerts")
