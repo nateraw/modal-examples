@@ -7,7 +7,7 @@ from modal.runner import deploy_app
 
 
 app = App()
-my_image = Image.debian_slim().pip_install("beautifulsoup4", "requests", "twilio")
+my_image = Image.debian_slim(python_version="3.10").pip_install("beautifulsoup4", "requests", "twilio")
 volume = Volume.from_name("mothership", create_if_missing=True)
 
 VOLUME_MOUNT_PATH = Path("/vol")
