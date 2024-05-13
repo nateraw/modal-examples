@@ -18,8 +18,8 @@ EVENT_LIST_PATH = VOLUME_MOUNT_PATH / "event_list.json"
     image=my_image,
     volumes={VOLUME_MOUNT_PATH: volume},
     secrets=[Secret.from_name("twilio")],
-    # Run every 5 minutes, all day erry day
-    # That's 288 requests / day.
+    # Run every 10 minutes, all day erry day
+    # That's 144 requests / day.
     schedule=Cron("*/10 * * * *"),
 )
 def check_for_updates():
