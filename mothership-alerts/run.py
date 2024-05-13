@@ -67,11 +67,12 @@ def check_for_updates():
     else:
         print("No new events found")
 
-        # For debugging, you can delete some events from the event list to test the alert works
-        # Delete a few existing events for testing purposes
+        # ########################################################################################
+        # # For debugging, you can delete some events from the event list to test the alert works
+        # ########################################################################################
+        # # Delete a few existing events for testing purposes
         # for event_id in list(old_data)[:3]:
         #     del old_data[event_id]
-
         # EVENT_LIST_PATH.write_text(json.dumps(old_data, indent=2))
         # volume.commit()
 
