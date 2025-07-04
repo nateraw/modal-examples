@@ -25,8 +25,8 @@ Replace/update the following variables:
 - Update `DESIRED_INSTANCE_TYPES` with the instance types you want to be notified about. By default, we watch for 8xA100 and 8xV100 machines.
 - Update the cron schedule in `run.py` to change how often you want to check for availability. By default, it checks every 5 minutes, M-F, 3am-10am UTC.
 
-3. Finally, run the script:
+3. Finally, run the script from root of repo:
 
 ```
-python run.py
+modal deploy -m lambda_watcher
 ```

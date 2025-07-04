@@ -5,14 +5,14 @@ import time
 from pathlib import Path
 
 import requests
-from modal import Image, Stub
+from modal import Image, App
 
 
-stub = Stub("parallel_test")
-stub.image = Image.debian_slim(python_version="3.10").apt_install("ffmpeg").pip_install("yt-dlp", "tqdm", "requests")
+app = App("parallel_test")
+app.image = Image.debian_slim(python_version="3.10").apt_install("ffmpeg").pip_install("yt-dlp", "tqdm", "requests")
 
 
-@stub.function()
+@app.function(gpu="H100")
 def download_clip(ytid, start_sec, end_sec, output_path="./data/videos", audio_only=False):
     os.makedirs(output_path, exist_ok=True)
 
@@ -35,7 +35,7 @@ def download_clip(ytid, start_sec, end_sec, output_path="./data/videos", audio_o
     return f"{ytid}.{ext}", open(output_filename, "rb").read()
 
 
-@stub.local_entrypoint()
+@app.local_entrypoint()
 def main(limit: int = None, out_dir: str = "./audio"):
     """Download audio clips from the MusicCaps dataset.
 
