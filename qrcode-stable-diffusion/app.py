@@ -2,10 +2,10 @@ import io
 import time
 from pathlib import Path
 
-from modal import Image, Stub, method
+from modal import Image, App, enter, method
 
 
-stub = Stub("stable-diffusion-qrcode-cli")
+app = App("stable-diffusion-qrcode-cli")
 cache_dir = "/vol/cache"
 
 
@@ -45,10 +45,12 @@ image = (
         "xformers",
         "Pillow",
         "qrcode",
+        "hf-transfer",
     )
+    .env({"HF_HUB_CACHE": cache_dir, "HF_HUB_ENABLE_HF_TRANSER": "1"})
     .run_function(download_model)
 )
-stub.image = image
+app.image = image
 
 
 def resize_for_condition_image(input_image, resolution: int):
@@ -65,9 +67,11 @@ def resize_for_condition_image(input_image, resolution: int):
     return img
 
 
-@stub.cls(gpu="A10G")
+@app.cls(gpu="A10G")
 class StableDiffusion:
-    def __enter__(self):
+
+    @enter()
+    def on_start(self):
         import diffusers
         import torch
 
@@ -133,7 +137,7 @@ class StableDiffusion:
         return image_output
 
 
-@stub.local_entrypoint()
+@app.local_entrypoint()
 def entrypoint(
     prompt: str,
     qrcode_content: str,
@@ -186,7 +190,7 @@ def entrypoint(
 
     sd = StableDiffusion()
     t0 = time.time()
-    images = sd.run_inference.call(
+    images = sd.run_inference.remote(
         prompt,
         qrcode_content,
         num_inference_steps=steps,
