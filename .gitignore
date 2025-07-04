@@ -163,3 +163,5 @@ cython_debug/
 youtube-downloader/audio/
 youtube-downloader/musiccaps-public.csv
 qrcode-stable-diffusion/qr_code_output/
+.DS_Store
+.vscode/
